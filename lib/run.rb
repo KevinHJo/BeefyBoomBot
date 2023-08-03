@@ -78,7 +78,7 @@ bot.command(:current) do |event|
   if event.voice.playing?
     embed = Discordrb::Webhooks::Embed.new(
       title: "",
-      fields: [Discordrb::Webhooks::EmbedField.new(name: "Currently Playing", value: "🎵 #{boom_box.currently_playing.sub(/ \[.*\]\.opus/, '')}")]
+      fields: [Discordrb::Webhooks::EmbedField.new(name: "Currently Playing", value: "🎵 #{boom_box.format_song_name(boom_box.currently_playing)}")]
     )
 
     bot.send_message(event.channel, "", false, embed)
@@ -87,7 +87,22 @@ bot.command(:current) do |event|
   end
 end
 
-bot.command(:play) do |event|
+bot.command(:play) do |event, url|
+  if url
+    begin
+      song = boom_box.download_song_file(url)
+    rescue
+      bot.send_message(event.channel, "😢 Something went wrong. Please try again")
+      return
+    else
+      path = "lib/songs/#{song}"
+      bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
+      boom_box.currently_playing = song
+      event.voice.play_file(path)
+      return
+    end
+  end
+
   if event.voice.playing?
     event.voice.continue
     bot.send_message(event.channel, "▶️ **Continuing**...")
@@ -112,12 +127,18 @@ bot.command(:pause) do |event|
 end
 
 bot.command(:skip) do |event|
-  return unless event.voice.playing?
+  return unless event.voice.playing? || boom_box.queue.empty?
 
   boom_box.delete_song_file(boom_box.currently_playing)
   event.voice.stop_playing(true)
 
   bot.send_message(event.channel, "⏭️ **Skipping**...")
+end
+
+bot.command(:stop) do |event|
+  event.voice.stop_playing(true)
+  boom_box.delete_song_file(boom_box.currently_playing)
+  bot.send_message(event.channel, "⏹️ **Stopping Music**")
 end
 
 bot.run
