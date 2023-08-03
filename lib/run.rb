@@ -50,7 +50,7 @@ bot.command(:queue) do |event|
   if event.voice.playing?
     current = [Discordrb::Webhooks::EmbedField.new(
       name: "Currently Playing",
-      value: "🎵 #{boom_box.currently_playing.sub(/ \[.*\]\.opus/, '')}"
+      value: "#{boom_box.currently_playing.sub(/ \[.*\]\.opus/, '')}"
     )]
   else
     current = []
