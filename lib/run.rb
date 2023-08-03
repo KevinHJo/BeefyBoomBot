@@ -47,10 +47,15 @@ bot.command(:queue) do |event|
     return bot.send_message(event.channel, "🪹 Looks like there's nothing here yet. Add a song with `!add_song <url>`")
   end
 
-  current = [Discordrb::Webhooks::EmbedField.new(
+  if event.voice.playing?
+    current = [Discordrb::Webhooks::EmbedField.new(
       name: "Currently Playing",
       value: "🎵 #{boom_box.currently_playing.sub(/ \[.*\]\.opus/, '')}"
-    )] if event.voice.playing?
+    )]
+  else
+    current = []
+  end
+
   fields = current + boom_box.queue.map.with_index do |song, idx|
     title = song.sub(/ \[.*\]\.opus/, '')
 
