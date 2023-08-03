@@ -6,16 +6,17 @@ require_relative 'boom_box'
 bot = Discordrb::Commands::CommandBot.new token: ENV["BOT_TOKEN"], prefix: "!"
 boom_box = BoomBox.new
 
-bot.command(:ping) do |event|
-  event.respond "Pong!"
-end
-
 bot.command(:join) do |event|
   FileUtils.rm_rf(Dir['lib/songs/*'])
   boom_box.clear_queue
 
   bot.voice_connect(event.author.voice_channel)
-  bot.send_message(event.channel, "🎉 **BeefyBoomBox** has joined the **#{event.channel.name}** voice channel! 🎉")
+  bot.send_message(event.channel, "🎉 **BeefyBoomBox** has joined the **#{event.author.voice_channel.name}** voice channel! 🎉")
+end
+
+bot.command(:kick) do |event|
+  event.voice.destroy
+  bot.send_message(event.channel, "👋 Goodbye!")
 end
 
 bot.command(:add_song, min_args: 1) do |event, url|
@@ -58,6 +59,19 @@ bot.command(:queue) do |event|
   bot.send_message(event.channel, "", false, embed)
 end
 
+bot.command(:current) do |event|
+  if event.voice.playing?
+    embed = Discordrb::Webhooks::Embed.new(
+      title: "",
+      fields: [Discordrb::Webhooks::EmbedField.new(name: "Currently Playing", value: "🎵 #{boom_box.currently_playing.sub(/ \[.*\]\.opus/, '')}")]
+    )
+
+    bot.send_message(event.channel, "", false, embed)
+  else
+    bot.send_message(event.channel, "🙉 Nothing currently playing. Use `!add <url>` to add songs to the queue! ")
+  end
+end
+
 bot.command(:play) do |event|
   if event.voice.playing?
     event.voice.continue
@@ -72,6 +86,7 @@ bot.command(:play) do |event|
       event.voice.play_file(path)
     end
 
+    FileUtils.rm_rf(Dir['lib/songs/*'])
     bot.send_message(event.channel, "Thanks for listening! 😊")
   end
 end
