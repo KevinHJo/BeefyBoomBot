@@ -1,4 +1,3 @@
-require 'byebug'
 require 'discordrb'
 require 'dotenv/load'
 require_relative 'boom_box'
