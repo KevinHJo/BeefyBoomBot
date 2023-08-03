@@ -43,17 +43,32 @@ bot.command(:remove_song, min_args: 1) do |event, idx|
 end
 
 bot.command(:queue) do |event|
+  if boom_box.queue.empty?
+    return bot.send_message(event.channel, "🪹 Looks like there's nothing here yet. Add a song with `!add_song <url>`")
+  end
+
+  if event.voice.playing?
+    current = [Discordrb::Webhooks::EmbedField.new(
+      name: "Currently Playing",
+      value: "#{boom_box.currently_playing.sub(/ \[.*\]\.opus/, '')}"
+    )]
+  else
+    current = []
+  end
+
+  fields = current + boom_box.queue.map.with_index do |song, idx|
+    title = song.sub(/ \[.*\]\.opus/, '')
+
+    Discordrb::Webhooks::EmbedField.new(
+      name: "",
+      value: "#{idx+1}: **#{title}**",
+      inline: false
+    )
+  end
+
   embed = Discordrb::Webhooks::Embed.new(
     title: "🎵🎶 __YOUR SONG QUEUE__ 🎶🎵",
-    fields: boom_box.queue.map.with_index do |song, idx|
-      title = song.sub(/ \[.*\]\.opus/, '')
-
-      Discordrb::Webhooks::EmbedField.new(
-        name: "",
-        value: "#{idx+1}: **#{title}**",
-        inline: false
-      )
-    end
+    fields: fields
   )
 
   bot.send_message(event.channel, "", false, embed)
