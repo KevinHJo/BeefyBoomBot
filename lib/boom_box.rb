@@ -29,7 +29,9 @@ class BoomBox
   end
 
   def remove_song(idx)
-    @queue.reject! { |ele| ele == @queue[idx] }
+    song = @queue[idx]
+    @queue.delete_at(idx)
+    delete_song_file(song) unless @queue.include?(song)
   end
 
   def delete_song_file(song)

@@ -33,7 +33,6 @@ bot.command(:remove_song, min_args: 1) do |event, idx|
   true_idx = idx.to_i - 1
 
   begin
-    boom_box.delete_song_file(boom_box.queue[true_idx])
     boom_box.remove_song(true_idx)
   rescue
     bot.send_message(event.channel, "⛔ **Unable** to remove song")
@@ -102,7 +101,7 @@ bot.command(:play) do |event, url|
       boom_box.source = 'single'
 
       event.voice.play_file(path)
-      boom_box.delete_song_file(boom_box.currently_playing)
+      boom_box.delete_song_file(boom_box.currently_playing) unless boom_box.queue.include?(song)
       return
     end
   end
@@ -119,8 +118,8 @@ bot.command(:play) do |event, url|
 
       bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
       boom_box.currently_playing = song
-      boom_box.remove_song(0)
       event.voice.play_file(path)
+      boom_box.remove_song(0)
     end
 
     FileUtils.rm_rf(Dir['lib/songs/*'])
@@ -143,20 +142,18 @@ bot.command(:skip) do |event|
   end
 
   if !boom_box.playing_from_queue?
-    event.voice.stop_playing(true)
     bot.send_message(event.channel, "⏭️ **Skipping**... Now playing songs from your queue")
+    event.voice.stop_playing(true)
     bot.execute_command(:play, event, [])
   else
-    boom_box.delete_song_file(boom_box.currently_playing)
-    event.voice.stop_playing(true)
-
     bot.send_message(event.channel, "⏭️ **Skipping**...")
+    event.voice.stop_playing(true)
+    return
   end
 end
 
 bot.command(:stop) do |event|
   event.voice.stop_playing(true)
-  boom_box.delete_song_file(boom_box.currently_playing)
   bot.send_message(event.channel, "⏹️ **Stopping Music**")
 end
 
