@@ -13,6 +13,8 @@ class BoomBox
   end
 
   def add_song(url)
+    raise StandardError.new "This is a playlist" if url.include?("list=")
+
     song = YtDlp::Video.new(url, extract_audio: true).download
     song = "#{File.basename(song, File.extname(song))}.opus"
     FileUtils.mv(song, "lib/songs/")
