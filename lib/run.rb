@@ -135,7 +135,12 @@ bot.command(:pause) do |event|
 end
 
 bot.command(:skip) do |event|
-  return unless event.voice.playing? || boom_box.queue.empty?
+  if !event.voice.playing?
+    return
+  elsif boom_box.queue.empty?
+    bot.send_message(event.channel, "🤷‍♀️ No songs in your queue")
+    return
+  end
 
   if !boom_box.playing_from_queue?
     event.voice.stop_playing(true)
