@@ -15,10 +15,16 @@ class BoomBox
   def add_song(url)
     raise StandardError.new "This is a playlist" if url.include?("list=")
 
+    song = download_song_file(url)
+    @queue << song
+  end
+
+  def download_song_file(url)
     song = YtDlp::Video.new(url, extract_audio: true).download
     song = "#{File.basename(song, File.extname(song))}.opus"
     FileUtils.mv(song, "lib/songs/")
-    @queue << song
+
+    return song
   end
 
   def remove_song(idx)
@@ -31,5 +37,9 @@ class BoomBox
 
   def clear_queue
     @queue = []
+  end
+
+  def format_song_name(song)
+    song.sub(/ \[.*\]\.opus/, '')
   end
 end
