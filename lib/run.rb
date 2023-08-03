@@ -101,7 +101,7 @@ bot.command(:play) do |event, url|
       boom_box.source = 'single'
 
       event.voice.play_file(path)
-      boom_box.delete_song_file(boom_box.currently_playing) unless @queue.include?(boom_box.currently_playing)
+      boom_box.delete_song_file(boom_box.currently_playing) unless boom_box.queue.include?(song)
       return
     end
   end
@@ -148,6 +148,7 @@ bot.command(:skip) do |event|
   else
     bot.send_message(event.channel, "⏭️ **Skipping**...")
     event.voice.stop_playing(true)
+    return
   end
 end
 
