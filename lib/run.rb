@@ -83,7 +83,7 @@ bot.command(:current) do |event|
 
     bot.send_message(event.channel, "", false, embed)
   else
-    bot.send_message(event.channel, "🙉 Nothing currently playing. Use `!add <url>` to add songs to the queue! ")
+    bot.send_message(event.channel, "🙉 Nothing currently playing. Use `!add_song <url>` to add songs to the queue, or `!play <url>` to play a single song!")
   end
 end
 
@@ -96,27 +96,35 @@ bot.command(:play) do |event, url|
       return
     else
       path = "lib/songs/#{song}"
+
       bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
       boom_box.currently_playing = song
+      boom_box.source = 'single'
+
       event.voice.play_file(path)
+      boom_box.delete_song_file(boom_box.currently_playing)
       return
     end
   end
 
-  if event.voice.playing?
+  if event.voice.playing? && !url
     event.voice.continue
     bot.send_message(event.channel, "▶️ **Continuing**...")
   else
+    boom_box.source = 'queue'
+
     while !boom_box.queue.empty?
       song = boom_box.queue[0]
       path = Dir["lib/songs/**/*"].find { |file| file.include?(song) }
 
+      bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
       boom_box.currently_playing = song
       boom_box.remove_song(0)
       event.voice.play_file(path)
     end
 
     FileUtils.rm_rf(Dir['lib/songs/*'])
+    boom_box.source = 'single'
     bot.send_message(event.channel, "Thanks for listening! 😊")
   end
 end
@@ -127,12 +135,23 @@ bot.command(:pause) do |event|
 end
 
 bot.command(:skip) do |event|
-  return unless event.voice.playing? || boom_box.queue.empty?
+  if !event.voice.playing?
+    return
+  elsif boom_box.queue.empty?
+    bot.send_message(event.channel, "🤷‍♀️ No songs in your queue")
+    return
+  end
 
-  boom_box.delete_song_file(boom_box.currently_playing)
-  event.voice.stop_playing(true)
+  if !boom_box.playing_from_queue?
+    event.voice.stop_playing(true)
+    bot.send_message(event.channel, "⏭️ **Skipping**... Now playing songs from your queue")
+    bot.execute_command(:play, event, [])
+  else
+    boom_box.delete_song_file(boom_box.currently_playing)
+    event.voice.stop_playing(true)
 
-  bot.send_message(event.channel, "⏭️ **Skipping**...")
+    bot.send_message(event.channel, "⏭️ **Skipping**...")
+  end
 end
 
 bot.command(:stop) do |event|
