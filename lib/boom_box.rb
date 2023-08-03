@@ -5,11 +5,12 @@ require 'yt_dlp'
 require 'fileutils'
 
 class BoomBox
-  attr_accessor :queue, :currently_playing
+  attr_accessor :queue, :currently_playing, :source
 
   def initialize
     @queue = []
     @currently_playing = ''
+    @source = 'single'
   end
 
   def add_song(url)
@@ -41,5 +42,9 @@ class BoomBox
 
   def format_song_name(song)
     song.sub(/ \[.*\]\.opus/, '')
+  end
+
+  def playing_from_queue?
+    source === 'queue'
   end
 end
