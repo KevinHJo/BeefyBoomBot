@@ -17,7 +17,8 @@ class BoomBox
   def download_song_file(url)
     begin
       song = YtDlp::Video.new(url, extract_audio: true).download
-    rescue
+    rescue => e
+      puts e.full_message(highlight: true, order: :top)
       puts "Oh no! Something went wrong. Trying download again..."
       retry
     end
