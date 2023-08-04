@@ -15,12 +15,18 @@ class BoomBox
   end
 
   def download_song_file(url)
+    limiter = 0
+
     begin
       song = YtDlp::Video.new(url, extract_audio: true).download
     rescue => e
       puts e.full_message(highlight: true, order: :top)
-      puts "Oh no! Something went wrong. Trying download again..."
-      retry
+
+      if limiter <= 5
+        limiter += 1
+        puts "Oh no! Something went wrong. Trying download again..."
+        retry
+      end
     end
 
     song = "#{File.basename(song, File.extname(song))}.opus"

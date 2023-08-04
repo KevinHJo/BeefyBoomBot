@@ -23,7 +23,8 @@ end
 bot.command(:add_song, min_args: 1) do |event, url|
   begin
     boom_box.add_song(url)
-  rescue
+  rescue => e
+    puts e.full_message(highlight: true, order: :top)
     bot.send_message(event.channel, "⛔ **Unable** to add song")
   else
     bot.send_message(event.channel, "✅ Song added **successfully** ")
@@ -35,7 +36,8 @@ bot.command(:remove_song, min_args: 1) do |event, idx|
 
   begin
     boom_box.remove_song(true_idx)
-  rescue
+  rescue => e
+    puts e.full_message(highlight: true, order: :top)
     bot.send_message(event.channel, "⛔ **Unable** to remove song")
   else
     bot.send_message(event.channel, "✅ Song removed **successfully**")
@@ -91,7 +93,8 @@ bot.command(:play) do |event, url|
   if url
     begin
       song = boom_box.download_song_file(url)
-    rescue
+    rescue => e
+      puts e.full_message(highlight: true, order: :top)
       bot.send_message(event.channel, "😢 Something went wrong. Please try again")
       return
     else
