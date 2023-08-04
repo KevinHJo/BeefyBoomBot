@@ -18,7 +18,7 @@ class BoomBox
     limiter = 0
 
     begin
-      song = YtDlp::Video.new(url, extract_audio: true).download
+      song = YtDlp::Video.new(url, extract_audio: true, output: "\"songs/%(title)s.%(opus)s\"").download
     rescue => e
       puts e.full_message(highlight: true, order: :top)
 
@@ -29,9 +29,7 @@ class BoomBox
       end
     end
 
-    song = "#{File.basename(song, File.extname(song))}.opus"
-    FileUtils.mv(song, "lib/songs/")
-
+    song.slice!("songs/")
     return song
   end
 
@@ -42,7 +40,7 @@ class BoomBox
   end
 
   def delete_song_file(song)
-    File.delete("lib/songs/#{song}") if File.exist?("lib/songs/#{song}")
+    File.delete("songs/#{song}") if File.exist?("songs/#{song}")
   end
 
   def clear_queue
@@ -50,7 +48,7 @@ class BoomBox
   end
 
   def format_song_name(song)
-    song.sub(/ \[.*\]\.opus/, '')
+    song.sub(/\.NA/, '')
   end
 
   def playing_from_queue?

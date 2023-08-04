@@ -6,9 +6,10 @@ require_relative 'boom_box'
 
 bot = Discordrb::Commands::CommandBot.new token: ENV["BOT_TOKEN"], prefix: "!"
 boom_box = BoomBox.new
+Dir.mkdir("songs") if !Dir.entries(".").include?("songs")
 
 bot.command(:join) do |event|
-  FileUtils.rm_rf(Dir['lib/songs/*'])
+  FileUtils.rm_rf(Dir['songs/*'])
   boom_box.clear_queue
 
   bot.voice_connect(event.author.voice_channel)
@@ -59,7 +60,7 @@ bot.command(:queue) do |event|
   end
 
   fields = current + boom_box.queue.map.with_index do |song, idx|
-    title = song.sub(/ \[.*\]\.opus/, '')
+    title = boom_box.format_song_name(song)
 
     Discordrb::Webhooks::EmbedField.new(
       name: "",
@@ -98,7 +99,7 @@ bot.command(:play) do |event, url|
       bot.send_message(event.channel, "😢 Something went wrong. Please try again")
       return
     else
-      path = "lib/songs/#{song}"
+      path = "songs/#{song}.opus"
 
       bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
       boom_box.currently_playing = song
@@ -118,7 +119,7 @@ bot.command(:play) do |event, url|
 
     while !boom_box.queue.empty?
       song = boom_box.queue[0]
-      path = Dir["lib/songs/**/*"].find { |file| file.include?(song) }
+      path = Dir["songs/**/*"].find { |file| file.include?(song) }
 
       bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
       boom_box.currently_playing = song
@@ -126,7 +127,7 @@ bot.command(:play) do |event, url|
       boom_box.remove_song(0)
     end
 
-    FileUtils.rm_rf(Dir['lib/songs/*'])
+    FileUtils.rm_rf(Dir['songs/*'])
     boom_box.source = 'single'
     bot.send_message(event.channel, "Thanks for listening! 😊")
   end
