@@ -1,8 +1,3 @@
-require 'discordrb'
-require 'dotenv/load'
-require 'yt_dlp'
-require 'fileutils'
-
 class BoomBox
   attr_accessor :queue, :currently_playing, :source
 

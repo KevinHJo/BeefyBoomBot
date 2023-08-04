@@ -1,5 +1,7 @@
-require 'discordrb'
-require 'dotenv/load'
+require 'bundler/setup'
+Bundler.require(:default)
+Dotenv.load
+
 require_relative 'boom_box'
 
 bot = Discordrb::Commands::CommandBot.new token: ENV["BOT_TOKEN"], prefix: "!"
