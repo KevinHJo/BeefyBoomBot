@@ -15,7 +15,13 @@ class BoomBox
   end
 
   def download_song_file(url)
-    song = YtDlp::Video.new(url, extract_audio: true).download
+    begin
+      song = YtDlp::Video.new(url, extract_audio: true).download
+    rescue
+      puts "Oh no! Something went wrong. Trying download again..."
+      retry
+    end
+
     song = "#{File.basename(song, File.extname(song))}.opus"
     FileUtils.mv(song, "lib/songs/")
 
