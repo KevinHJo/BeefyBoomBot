@@ -3,7 +3,7 @@ class BoomBox
 
   def initialize
     @queue = {}
-    @currently_playing = ''
+    @currently_playing = {}
     @source = 'single'
   end
 

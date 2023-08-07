@@ -51,14 +51,16 @@ bot.command(:remove_song, min_args: 1) do |event, idx|
 end
 
 bot.command(:queue) do |event|
-  if boom_box.queue[event.author.voice_channel.id].empty?
+  voice_channel = event.author.voice_channel
+
+  if !boom_box.queue[voice_channel.id] || boom_box.queue[voice_channel.id]&.empty?
     return bot.send_message(event.channel, "🪹 Looks like there's nothing here yet. Add a song with `!add_song <url>`")
   end
 
   if event.voice.playing?
     current = [Discordrb::Webhooks::EmbedField.new(
       name: "Currently Playing",
-      value: "#{boom_box.format_song_name(boom_box.currently_playing)}"
+      value: "#{boom_box.format_song_name(boom_box.queue[voice_channel.id][0])}"
     )]
   else
     current = []
@@ -86,7 +88,12 @@ bot.command(:current) do |event|
   if event.voice.playing?
     embed = Discordrb::Webhooks::Embed.new(
       title: "",
-      fields: [Discordrb::Webhooks::EmbedField.new(name: "Currently Playing", value: "🎵 #{boom_box.format_song_name(boom_box.currently_playing)}")]
+      fields: [
+        Discordrb::Webhooks::EmbedField
+          .new(
+            name: "Currently Playing",
+            value: "🎵 #{boom_box.format_song_name(boom_box.currently_playing[event.author.voice_channel.id])}")
+        ]
     )
 
     bot.send_message(event.channel, "", false, embed)
@@ -109,13 +116,13 @@ bot.command(:play) do |event, url|
       path = "songs/#{voice_channel.id}/#{song}.opus"
 
       bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
-      boom_box.currently_playing = song
+      boom_box.currently_playing[voice_channel.id] = song
       boom_box.source = 'single'
 
       event.voice.play_file(path)
 
       boom_box.delete_song_file(
-        song: boom_box.currently_playing,
+        song: boom_box.currently_playing[voice_channel.id],
         server_id: voice_channel.id
       ) unless boom_box.queue[voice_channel.id]&.include?(song)
 
@@ -136,7 +143,7 @@ bot.command(:play) do |event, url|
       path = Dir["songs/#{voice_channel.id}/**/*"].find { |file| file.include?(song) }
 
       bot.send_message(event.channel, "▶️ Now playing: **#{boom_box.format_song_name(song)}**")
-      boom_box.currently_playing = song
+      boom_box.currently_playing[voice_channel.id] = song
       event.voice.play_file(path)
       boom_box.remove_song(server_id: voice_channel.id ,idx: 0)
     end
