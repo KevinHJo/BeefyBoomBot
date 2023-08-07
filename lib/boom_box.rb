@@ -2,23 +2,24 @@ class BoomBox
   attr_accessor :queue, :currently_playing, :source
 
   def initialize
-    @queue = []
+    @queue = {}
     @currently_playing = ''
     @source = 'single'
   end
 
-  def add_song(url)
+  def add_song(url:, server_id:)
     raise StandardError.new "This is a playlist" if url.include?("list=")
 
-    song = download_song_file(url)
-    @queue << song
+    song = download_song_file(url: url, server_id: server_id)
+    @queue[server_id] ||= []
+    @queue[server_id] << song
   end
 
-  def download_song_file(url)
+  def download_song_file(url:, server_id:)
     limiter = 0
 
     begin
-      song = YtDlp::Video.new(url, extract_audio: true, output: "\"songs/%(title)s.%(opus)s\"").download
+      song = YtDlp::Video.new(url, extract_audio: true, output: "\"songs/#{server_id}/%(title)s.%(opus)s\"").download
     rescue => e
       puts e.full_message(highlight: true, order: :top)
 
@@ -29,22 +30,23 @@ class BoomBox
       end
     end
 
-    song.slice!("songs/")
+    song.slice!("songs/#{server_id}/")
     return song
   end
 
-  def remove_song(idx)
-    song = @queue[idx]
-    @queue.delete_at(idx)
-    delete_song_file(song) unless @queue.include?(song)
+  def remove_song(server_id:, idx:)
+    song = @queue[server_id][idx]
+    @queue[server_id].delete_at(idx)
+    delete_song_file(song: song, server_id: server_id) unless @queue.include?(song)
   end
 
-  def delete_song_file(song)
-    File.delete("songs/#{song}") if File.exist?("songs/#{song}")
+  def delete_song_file(song:, server_id:)
+    path = "songs/#{server_id}/#{song}.opus"
+    File.delete(path) if File.exist?(path)
   end
 
-  def clear_queue
-    @queue = []
+  def clear_queue(server_id:)
+    @queue.delete(server_id)
   end
 
   def format_song_name(song)
